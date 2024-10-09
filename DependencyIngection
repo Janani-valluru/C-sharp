@@ -1,0 +1,79 @@
+using Ninject;
+using System;
+
+namespace ConsoleData2
+{
+    public interface ICalculator
+    {
+        void Calculation();
+    }
+
+    public interface IDiscount
+    {
+        void DiscountAmount();
+    }
+
+    public class ShoppingCart
+    {
+        ICalculator calc;
+        public ShoppingCart(ICalculator calc)  // Dependency injected
+        {
+            this.calc = calc;
+        }
+
+        public void ShowProducts()
+        {
+            Console.WriteLine("Showing Products");
+            calc.Calculation();  // Using injected calculator
+        }
+    }
+
+    public class MyCalculator : ICalculator
+    {
+        public void Calculation()
+        {
+            Console.WriteLine("MyCalculator::Calculation");
+        }
+    }
+
+    public class OurCalculator : ICalculator
+    {
+        IDiscount disc;
+				        public OurCalculator()  // No dependency injection
+        {
+            this.disc = disc;
+        }
+
+        public void Calculation()
+        {
+            Console.WriteLine("OurCalculator::Calculation");
+            disc.DiscountAmount();  // Using injected discount
+        }
+    }
+
+    public class MyDiscount : IDiscount
+    {
+        public void DiscountAmount()
+        {
+            Console.WriteLine("MyDiscount::DiscountAmount");
+        }
+    }
+
+    internal class CMain2
+    {
+        static IKernel DIFactory()
+        {
+            IKernel kernel = new StandardKernel();
+            kernel.Bind<ICalculator>().To<MyCalculator>();
+            kernel.Bind<IDiscount>().To<MyDiscount>();
+            return kernel;
+        }
+
+        static void Main(string[] args)
+        {
+            IKernel kernel = DIFactory();
+            ShoppingCart cart = kernel.Get<ShoppingCart>();  // Injecting dependencies
+            cart.ShowProducts();
+        }
+    }
+}
