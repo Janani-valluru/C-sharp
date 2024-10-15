@@ -1,0 +1,85 @@
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Data.SqlClient;
+
+
+namespace DalLib
+{
+    public class EmpOrm
+    {
+        public int EmpId { get; set; }
+        public string EmpName { get; set; } = string.Empty;
+        public int DeptId { get; set; }
+    }
+
+    public class CDal
+    {
+        private readonly string cnnStr;
+        SqlConnection cnn;
+        SqlCommand cmd;
+
+        public CDal(string cnnStr)
+        {
+            this.cnnStr = cnnStr;
+            cnn = new SqlConnection(cnnStr);
+            cmd = new SqlCommand();
+            cmd.Connection = cnn;
+        }
+        public IEnumerable<EmpOrm> GetEmployees()
+        {
+            List<EmpOrm> list = new List<EmpOrm>();
+            cmd.CommandText = "select * from employee";
+
+            cnn.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new EmpOrm { EmpId = reader.GetInt32(0), EmpName = reader.GetString(1), DeptId = reader.GetInt32(2) });
+            }
+            reader.Close();
+            cnn.Close();
+            return list;
+        }
+
+        public EmpOrm GetEmpById(int id)
+        {
+            List<EmpOrm> list = new List<EmpOrm>();
+            cmd.CommandText = $"select * from employee where Eid={id}";
+
+            cnn.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                list.Add(new EmpOrm { EmpId = reader.GetInt32(0), EmpName = reader.GetString(1), DeptId = reader.GetInt32(2) });
+            }
+            reader.Close();
+            cnn.Close();
+            return list.Count == 0 ? null : list[0];
+        }
+        public bool ModifyEmp(EmpOrm emp)
+        {
+            cmd.CommandText = $"update employee set EName='{emp.EmpName}',Dept={emp.DeptId} where Eid={emp.EmpId}";
+            System.Console.WriteLine(cmd.CommandText);
+            cnn.Open();
+            int rowsAffected = cmd.ExecuteNonQuery();
+            cnn.Close();
+            return rowsAffected > 0;
+        }
+        public bool DeleteEmp(int id)
+        {
+            cmd.CommandText = $"delete employee where Eid={id}";
+            cnn.Open();
+            int rowsAffected = cmd.ExecuteNonQuery();
+            cnn.Close();
+            return rowsAffected > 0;
+        }
+        public bool AddEmp(EmpOrm emp)
+        {
+            cmd.CommandText = $"insert into  employee values({emp.EmpId},'{emp.EmpName}',{emp.DeptId})";
+            cnn.Open();
+            int rowsAffected = cmd.ExecuteNonQuery();
+            cnn.Close();
+            return rowsAffected > 0;
+        }
+    }
+}
